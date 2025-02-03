@@ -4,18 +4,21 @@ module.exports = (req, res, next) => {
 
     //1.istek ile gelen parametrelere eriş
     let queryObj = { ...req.query };
+    // 2. filtrelemeye tabi tutulmayacak olan parametreleri (sort,fields,page,limit) query nesnesinden kaldır 
+    const fields = ["sort", "limit", "pages", "fields"]
+    fields.forEach((el) => delete queryObj[el])
 
 
-    //2.replace methodunu kullanabilmek için nesneyi stringe çevir
+    //3.replace methodunu kullanabilmek için nesneyi stringe çevir
     let queryString = JSON.stringify(queryObj)
-    //3.btün opratörlerin başına $ işareti koy
+    //4.btün opratörlerin başına $ işareti koy
     queryString = queryString.replace(/\b(gt|gte|lte|lt|ne)\b/g, (found) => `$${found}`
     )
 
-    //4 bu mw den sonra çalışan methoda nesneyi aktar
+    //5 bu mw den sonra çalışan methoda nesneyi aktar
     req.formattedQuery = JSON.parse(queryString)
 
-    //5 mw den sonraki method çalıssın
+    //6 mw den sonraki method çalıssın
     next()
 
 

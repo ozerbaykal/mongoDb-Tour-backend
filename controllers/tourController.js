@@ -2,12 +2,44 @@ const mogoose = require("mongoose")
 const Tour = require("../models/tourModel.js")
 exports.getAllTours = async (req, res) => {
     try {
+        //veri tabanındaki tüm turları almak için sorgu oluştur(burada çalıştırmıyoruz)
+        const tourQuery = Tour.find(req.formattedQuery)
+        //eğer sort parametresi varsa sırala
+        if (req.query.sort) {
+            tourQuery.sort(req.query.sort.split(",").join(" "))
+        } else {
+            //varsayılan olarak sıralama parametre gelmez ise createdAt e göre sırala"
+            tourQuery.sort("-createdAt");
+        }
 
 
-        //4.veri tabanındaki tüm turları alır
-        const tours = await Tour.find(req.formattedQuery)
+        //eğer limit parametresi varsa limitle
+        if (req.query.fields) {
+            tourQuery.select(req.query.fields.replaceAll(",", " "))
+        }
 
-        res.json({ message: "getAllTours başarılı", tours })
+
+
+        // eğer sayfa paramtresi  varsa sayfalama yap
+
+        const page = Number(req.query.page) || 1; //mevcut sayfa yapısı
+        const limitCount = Number(req.query.limit) || 10; //sayfa başına eleman sayısı
+        const skipCount = (req.query.page - 1) * limit //mevcut sayfadaki elemanlara erişmek için kaç eleman atlanmalı
+
+        tourQuery.skip(skipCount).limit(limitCount)
+
+
+
+        //sorguyu çalıştır
+        const tours = await tourQuery;
+
+        // client 'a veritabanından gelen verileri gönder
+        res.json({
+            message: "getAllTours başarılı",
+            results: tours.length,
+            tours
+
+        })
 
 
     } catch (error) {
