@@ -4,7 +4,9 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "import": "node ./dev-data/commands --import",
+    "clear": "node ./dev-data/commands --clear"
   },
   "keywords": [],
   "author": "",
