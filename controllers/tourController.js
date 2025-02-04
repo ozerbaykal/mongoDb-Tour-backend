@@ -5,7 +5,10 @@ const APIFeatures = require("../utils/apiFeatures.js");
 //istek parametrelerini frontendin oluşturması yerine mw ile biz tanımlayacağız
 
 exports.aliasTopTours = async (req, res, next) => {
-    req.query.sort = "-ratingsAverage";
+    req.query.sort = "-ratingsAverage,-ratingsQuantity";
+    req.query["price[lte]"] = "1200";
+    req.query.limit = 5;
+    req.query.fields = "name,price,summary,difficulty,ratingsAverage";
 
     next()
 }
@@ -83,3 +86,47 @@ exports.deleteTour = async (req, res) => {
         res.json({ message: "deleteTour başarılı" });
     } catch (error) { }
 };
+
+//rapor oluşturup gönderecek
+
+exports.getTourStats = async (req, res) => {
+    try {
+        //aggregation pipeline
+        //Raporlama adımları
+
+        const stats = await Tour.aggregate([
+            //1.adım  ratingi 4 ve üzeri olan turları al
+            {
+                $match: { ratingsAverage: { $gte: 4.0 } }
+            },
+
+            //2.adım zorluğa göre gruplandır ve ortalama değerleri hesapla
+            {
+                $group: {
+                    _id: "$difficulty",
+                    count: { $sum: 1 },
+                    avgRating: { $avg: "$ratingsAverage" },
+                    avgPrice: { $avg: "$price" },
+                    minPrice: { $min: "$price" },
+                    maxPrice: { $max: "$price" },
+
+                },
+            },
+
+            //3.adım gruplanan veriyi fiyata göre sırala
+            { $sort: { avgPrice: 1 } },
+
+            //4.adım  fiyatı 500 den büyük olanları al
+
+            { $match: { avgPrice: { $gte: 500 } } },
+
+
+
+
+        ]);
+        return res.status(200).json({ message: "Rapor oluşturuldu", stats })
+    } catch (err) {
+        return res.status(500).json({ message: "Rapor oluşturalamadı" })
+
+    }
+}
