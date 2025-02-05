@@ -86,6 +86,15 @@ tourSchema.virtual("slug").get(function () {
 
 })
 
+//!Document Middleware
+
+//Bir belgenin kaydedilme,güncelleme,silinme okuma gibi olaylardan önce veya sonra işlem grçekleştirmke istiyorsak kullanırız.
+//Örn;CLient'tan gelen tur verisinin veri tabanına kaydedilmeden önce kaç saat sürdüğünü hesaplayalım
+tourSchema.pre("save", function (next) {
+    //gerekli işlemleri yap
+    this.durationHour = this.duration * 24
+})
+
 
 
 //şemayı kullanarak model oluşturuyouz
