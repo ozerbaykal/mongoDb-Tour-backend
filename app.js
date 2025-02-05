@@ -5,7 +5,7 @@ const tourRouter = require("./routes/tourRoutes.js")
 const userRouter = require("./routes/userRoutes.js")
 const reviewRouter = require("./routes/reviewRoutes.js")
 
-//express uyggulması oluştur
+//express uygulması oluştur
 const app = express();
 
 //express in body bölümünd gelen verilere erişmemizi sağlan middleware
