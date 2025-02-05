@@ -1,14 +1,31 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 // veri tabanına kaydedilecek olan verilerin kısıtlamalarını yazalım
 
 const tourSchema = new mongoose.Schema({
-    name: { type: String, unique: [true, "Bu isim zaten mevcut"], required: [true, "Tur isim değerine sahip olmalı"] },
+    name: {
+        type: String, unique: [true, "Bu isim zaten mevcut"],
+        required: [true, "Tur isim değerine sahip olmalı"],
+        // validate: [validator.isAlphanumeric, "Tur isminde özel karakter içermemeli"],
+
+    },
 
 
     price: { type: Number, required: [true, "Tur fiyat değerine sahip olmalı"] },
     priceDiscount: {
         type: Number,
+        //custom validator(kendi yazdığımız kontrol methodları)
+        //doğrulama fonsksiyonları false return ederse doğrulamadan geçmedi anlamında gelir ve belge veritabanına kaydedilmez true return ederse doğrulamadan geçti anlamına gelir
+
+        validate: {
+            validator: function (value) {
+                return value < this.price;
+
+            },
+            message: "indirim fiyatı asıl fiyattan büyük olamaz"
+
+        }
 
     },
     duration: {
