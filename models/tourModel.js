@@ -93,7 +93,33 @@ tourSchema.virtual("slug").get(function () {
 tourSchema.pre("save", function (next) {
     //gerekli işlemleri yap
     this.durationHour = this.duration * 24
+    next()
 })
+
+//?pre()işlemden önce post() işelemden sonra mw i çalıştırır
+
+tourSchema.post("updateOne", function (doc, next) {
+    //kullanıcının şifresini güncellemesinden sonra haber veya doğrulama mail i gönderir
+
+    next()
+})
+//! Query Middleware
+//sorgudan önce veya sonra çalıştırdığımız mw lerdi
+tourSchema.pre("find", function (next) {
+    //premium olanları gödnermek istemediğimizde yapılan sorgularda otomatik premium olmayanları filtreleyelim
+    this.find({ premium: { $ne: true } })
+    next()
+})
+
+//! Aggregate Middleware
+//rapor oluştruma işlemlerinden önce veya sonra çalıştırdığımız mw dir
+tourSchema.pre("aggregate", function (next) {
+    //premium olan turlar rapora dahil edilmesin
+    this.pipeline().unshift({ $match: { premium: { $ne: true } } })
+    next()
+})
+
+
 
 
 
