@@ -65,11 +65,26 @@ const tourSchema = new mongoose.Schema({
 },
     //şema ayarları
 
-    { timestamps: true }
+    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 
 
 
 );
+
+//!Virtual Property
+
+//Şuan veritabanında tutarların fiyatlarını ve indirim fiyatını tutuyoruz ama frontend bizden ayrıca indirimli fiyatıda istedi.Bu durumda indirimli fiyatları veri tabanında tutmak gereksiz maaliyey olur.Bunun yerine cevap gönderme sırasında bu değerleri hesaplayıp eklersek hem frontend in ihtiyacı karşılanır hemde veri tabanında gereksiz yer kaplamaz.Bunu VİrtualProperty ile yapıyoruz.
+
+tourSchema.virtual("discountedPrice").get(function () {
+    return this.price - this.priceDiscount
+});
+
+//Şuan veritabanında tur ismini tutuyoruz ama client ekstra olarak slug istedi
+tourSchema.virtual("slug").get(function () {
+    return this.name.replaceAll(" ", "-").toLowerCase()
+
+
+})
 
 
 
