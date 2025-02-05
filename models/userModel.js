@@ -61,6 +61,12 @@ const userSchema = new Schema({
 //password alanını şifreleme algoritmaları ile şifrele
 
 userSchema.pre("save", async function (next) {
+    // "save" kullanıcı belgesi her güncellendiğinde çalışır ama parola değişmediyse aşağıdaki kodlar çalışmamalı.
+    if (!this.isModified("password")) {
+        return next()
+
+    }
+
     //şifreyi salt ve hashle
     this.password = await bcrypt.hash(this.password, 12)
 
