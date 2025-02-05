@@ -1,5 +1,5 @@
 const express = require("express");
-const { getAllTours, createTour, getTour, updateTour, deleteTour, aliasTopTours, getTourStats } = require("../controllers/tourController.js")
+const { getAllTours, createTour, getTour, updateTour, deleteTour, aliasTopTours, getTourStats, getMonthlyPlan } = require("../controllers/tourController.js")
 const formattedQuery = require("../middleware/formatQuery")
 
 const router = express.Router()
@@ -8,6 +8,8 @@ const router = express.Router()
 router.route("/top-tours").get(aliasTopTours, getAllTours)
 
 router.route("/tour-stats").get(getTourStats)
+
+router.route("/monthly-plan/:year").get(getMonthlyPlan)
 
 router.route("/")
     .get(formattedQuery, getAllTours)
