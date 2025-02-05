@@ -2,6 +2,7 @@
 
 const { Schema, default: mongoose } = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcrypt")
 
 const userSchema = new Schema({
     name: {
@@ -30,9 +31,20 @@ const userSchema = new Schema({
         required: [true, "Kullanıcı şifreye sahip olmalıdır"],
         minLength: [8, "Şİfre en az 6 karakter olmalı"],
         validate: [validator.isStrongPassword, "Şifreniz yeterince güçlü değil"]
+    },
+    passwordConfirm: {
+        type: String,
+        required: [true, "Lütfen şifrenizi onaylayın"],
+        validate: {
+            validator: function (value) {
+                return value === this.password;
 
+            },
+            message: " Onay şifresi eşlenmiyor"
+        }
 
     },
+
     role: {
         type: String,
         enum: ["user", "guide", "lead-guide", "admin"],
@@ -45,7 +57,23 @@ const userSchema = new Schema({
 
 
 })
+//veri tabanına kullanıcıyı kaydetmeden önce passwordConfirm alanını kaldır;
+//password alanını şifreleme algoritmaları ile şifrele
+
+userSchema.pre("save", async function (next) {
+    //şifreyi salt ve hashle
+    this.password = await bcrypt.hash(this.password, 12)
+
+
+    //1.  $2b$12$XMRZn5/W0rVY3btNJ7L.6uQy6zCECOIdrMC.AUkXAQVf0X4Clt0Gi
+    //2.  $2b$12$4A5N47WQ9UEHHK1rLTGPj.N1LIhiTimqJ5OFuddGk9wH2gdAV.c1i
+    //onay şifresini kaldır
+    this.passwordConfirm = undefined
+
+    next()
+})
 
 const User = mongoose.model("User", userSchema)
 
 module.exports = User;
+
