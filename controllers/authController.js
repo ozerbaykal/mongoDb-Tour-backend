@@ -17,6 +17,17 @@ const signToken = (user_id) => {
 const createSendToken = (user, code, res) => {
     //tokeni oluştur
     const token = signToken(user._id);
+
+    //çerez olarak gönderilecek veriyi belirle
+    res.cookie("jwt", token, {
+        expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        //secure:true, //true olunca sadece https protokolündeki domainlerde seyehat eder
+    })
+
+    //şifreyi client'a gönderilen cevaptan kaldır
+    user.password = undefined
+
     //client e cevap gönder
     res.status(code).json({ message: "Oturum açıldı", token, user });
 };
@@ -59,7 +70,7 @@ exports.login = async (req, res) => {
         }
 
         //3)client'tan gelen şifre ile veritabanında saklanan haslenmiş şifre ile eşleniyor mu kontrol et
-        const isValid = await bcrypt.compare(password, user.password)
+        const isValid = await user.correctPass(password, user.password)
 
         //3.1) şifre yanlışssa hata fırlat
         if (!isValid) {
@@ -84,3 +95,43 @@ exports.logout = (req, res) => {
         res.status(500).json({ message: "Üzgünüz bir sorun oluştu" });
     }
 };
+
+// Authorization MW
+// Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
+// Geçerliyse route'a erişime izin vermeli
+// Geçerli değilse hata fırlat
+
+exports.protect = (req, res, next) => {
+
+    //1) client tan gelen tokeni al
+    let token = req.cookies.jwt || req.headers.authorization;
+
+    if (token && token.startsWith("Bearer")) {
+        token = token.split(" ")[1]
+    }
+
+    //1.2) token gelmediyse hata fırlat
+    if (!token) {
+        return res.status(403).json({ message: "Bu işlem için yetkiniz yok (jwt gönderilmedi)" })
+    }
+
+    // 2) token geçerliliğini doğrulunu kontrol et(zaman aşımına uğradımı / imza doğrumu )
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    } catch (error) {
+        console.log(error);
+        return res.status(403).json({ message: "Gönderilen token geçersiz" })
+
+
+    }
+
+    //todo 3) token ile gelen kullanıcının hesabı duruyor mu
+
+    //todo 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
+
+
+    next()
+
+}
