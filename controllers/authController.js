@@ -32,7 +32,7 @@ const createSendToken = (user, code, res) => {
     res.status(code).json({ message: "Oturum açıldı", token, user });
 };
 
-//kayıt Ol
+//>>>>>>>>>>>>>>>kayıt Ol
 exports.signUp = async (req, res) => {
     try {
         //yeni bir kullanıcı oluştur
@@ -52,7 +52,7 @@ exports.signUp = async (req, res) => {
     }
 };
 
-//giriş yap
+//>>>>>>>>>>>>>>>giriş yap
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body
@@ -86,17 +86,23 @@ exports.login = async (req, res) => {
     }
 };
 
-//çıkış yap
+//>>>>>>>>>>>>>>>>çıkış yap
 
 exports.logout = (req, res) => {
     try {
-        res.status(201).json({ message: "Çıkış yapıldı" });
+
+        res.clearCookie("jwt").status(200).json({ message: "Çıkış yapıldı" });
     } catch (error) {
         res.status(500).json({ message: "Üzgünüz bir sorun oluştu" });
     }
 };
 
-// Authorization MW
+
+
+
+
+
+//>>>>>>>>>>>> Authorization MW
 // Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
 // Geçerliyse route'a erişime izin vermeli
 // Geçerli değilse hata fırlat
@@ -121,6 +127,10 @@ exports.protect = (req, res, next) => {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     } catch (error) {
+        if (error.message === "jwt expired") {
+
+            return res.status(403).json({ message: "Oturumunuzun süresi doldu(tekrar giriş yapın)" })
+        }
         console.log(error);
         return res.status(403).json({ message: "Gönderilen token geçersiz" })
 
