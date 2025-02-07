@@ -107,7 +107,7 @@ exports.logout = (req, res) => {
 // Geçerliyse route'a erişime izin vermeli
 // Geçerli değilse hata fırlat
 
-exports.protect = (req, res, next) => {
+exports.protect = async (req, res, next) => {
 
     //1) client tan gelen tokeni al
     let token = req.cookies.jwt || req.headers.authorization;
@@ -137,9 +137,28 @@ exports.protect = (req, res, next) => {
 
     }
 
-    //todo 3) token ile gelen kullanıcının hesabı duruyor mu
+    // 3) token ile gelen kullanıcının hesabı duruyor mu
+    const activeUser = await User.findById(decoded.id)
 
-    //todo 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
+    //3.1) hesap durmuyorsa hata gönder
+    if (!activeUser) {
+        return res.status(404).json({ message: "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)" })
+    }
+    if (!activeUser.active) {
+        return res.status(404).json({ message: "Kullanıcının hesabına dondurulmuş" })
+    }
+
+    // 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
+    if (activeUser.passChangedAt && decoded.iat) {
+        const passChangedSeconds = parseInt(activeUser.passChangedAt.getTime() / 1000)
+
+        if (passChangedSeconds > decoded.iat) {
+            return res.status(403).json({
+                message: "Yakın zamanda şifrenizi değiştirdiniz,Lütfen tekrar giriş yapın"
+            })
+        }
+
+    }
 
 
     next()

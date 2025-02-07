@@ -53,6 +53,10 @@ const userSchema = new Schema({
     active: {
         type: Boolean,
         default: true,
+    },
+
+    passChangedAt: {
+        type: Date
     }
 
 
