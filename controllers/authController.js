@@ -103,7 +103,7 @@ exports.logout = (req, res) => {
 
 
 //>>>>>>>>>>>> Authorization MW
-// Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
+// 1)Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
 // Geçerliyse route'a erişime izin vermeli
 // Geçerli değilse hata fırlat
 
@@ -160,7 +160,30 @@ exports.protect = async (req, res, next) => {
 
     }
 
+    // mw den'den sonra çalışacak olan bütün mw ve methodlara aktüf kullanıcı verisini gönder
+    req.user = activeUser
+
 
     next()
 
+}
+
+
+// 2) Berlirli roldeki kullanıcıların route'a erişimine izin verirken diğerlerini engelleyen mw
+
+exports.restrictTo = (...roles) => (req, res, next) => {
+    console.log(roles);
+    console.log(req.user.role)
+    //a)mevcut kullanıcının kodu izin verilen roller arasında değilse hata gönder
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({
+            message: "Bu işlem için yetkiniz yok(rolunüz yetersiz)"
+        })
+
+    }
+    //b) kullanıcının rolü yeterli ise devam et
+
+
+
+    next()
 }
