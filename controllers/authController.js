@@ -102,7 +102,8 @@ exports.logout = (req, res) => {
 
 
 
-//>>>>>>>>>>>> Authorization MW
+// >>>>>>>>>>>> Authorization MW <<<<<<<<<<<<<
+
 // 1)Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
 // Geçerliyse route'a erişime izin vermeli
 // Geçerli değilse hata fırlat
@@ -187,3 +188,5 @@ exports.restrictTo = (...roles) => (req, res, next) => {
 
     next()
 }
+
+// >>>>>>>>>>>> Authorization MW <<<<<<<<<<<<<
