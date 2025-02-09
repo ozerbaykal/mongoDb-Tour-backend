@@ -1,6 +1,7 @@
 const mogoose = require("mongoose");
 const Tour = require("../models/tourModel.js");
 const APIFeatures = require("../utils/apiFeatures.js");
+const e = require("../utils/error.js")
 
 //istek parametrelerini frontendin oluşturması yerine mw ile biz tanımlayacağız
 

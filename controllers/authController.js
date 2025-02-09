@@ -1,6 +1,8 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt")
+const e = require("../utils/error.js")
+
 
 //jwt token'i olulturup döndüren fonksiyon
 const signToken = (user_id) => {
@@ -33,7 +35,7 @@ const createSendToken = (user, code, res) => {
 };
 
 //>>>>>>>>>>>>>>>kayıt Ol
-exports.signUp = async (req, res) => {
+exports.signUp = async (req, res, next) => {
     try {
         //yeni bir kullanıcı oluştur
 
@@ -46,19 +48,21 @@ exports.signUp = async (req, res) => {
         //jwt token oluşutur ve client a gönder
         createSendToken(newUser, 201, res);
     } catch (error) {
-        res
-            .status(500)
-            .json({ message: "Üzgünüz bir sorun oluştu", error: error.message });
+
+        next(e(500, error.message))
+
+
     }
 };
 
 //>>>>>>>>>>>>>>>giriş yap
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body
         //1)email ve şifre geldimi kontrol et
         if (!email || !password) {
-            return res.status(400).json({ message: "Lütfen mail ve şifre giriniz" })
+            //return res.status(400).json({ message: "Lütfen mail ve şifre giriniz" })
+            next(e(400, "Lütfen mail ve şifre giriniz"))
         }
 
         //2)client 'tan gelen email ile kayıtlı kullanıcı var mı kontrol et
@@ -66,15 +70,18 @@ exports.login = async (req, res) => {
 
         //2.1)kayıtlı kullanıcı yoksa hata fırlat
         if (!user) {
-            return res.status(400).json({ message: "girdiğiniz mail kayıtlı kullancı bulunamadı" })
+
+            next(e(404, "Girdiğiniz mail kayıtlı kullancı bulunamadı"))
+
         }
 
         //3)client'tan gelen şifre ile veritabanında saklanan haslenmiş şifre ile eşleniyor mu kontrol et
         const isValid = await user.correctPass(password, user.password)
 
         //3.1) şifre yanlışssa hata fırlat
+
         if (!isValid) {
-            return res.status(400).json({ message: "şifreniz  hatalı,lütfen geçerli bir şifre girin" })
+            next(e(403, "şifreniz  hatalı,lütfen geçerli bir şifre girin"))
 
         }
 
@@ -82,7 +89,8 @@ exports.login = async (req, res) => {
         createSendToken(user, 200, res)
 
     } catch (error) {
-        res.status(500).json({ message: "Üzgünüz bir sorun oluştu" });
+        next(e(403, error.message))
+
     }
 };
 
@@ -139,14 +147,22 @@ exports.protect = async (req, res, next) => {
     }
 
     // 3) token ile gelen kullanıcının hesabı duruyor mu
-    const activeUser = await User.findById(decoded.id)
+    let activeUser
+    try {
+        activeUser = await User.findById(decoded.id)
+
+    } catch (error) {
+        next(e(403, "Gönderilen token geçersiz"))
+
+    }
 
     //3.1) hesap durmuyorsa hata gönder
     if (!activeUser) {
-        return res.status(404).json({ message: "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)" })
+        next(e(403, "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)"))
+
     }
     if (!activeUser.active) {
-        return res.status(404).json({ message: "Kullanıcının hesabına dondurulmuş" })
+        next(e(403, "Kullanıcının hesabına dondurulmuş"))
     }
 
     // 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
@@ -154,9 +170,8 @@ exports.protect = async (req, res, next) => {
         const passChangedSeconds = parseInt(activeUser.passChangedAt.getTime() / 1000)
 
         if (passChangedSeconds > decoded.iat) {
-            return res.status(403).json({
-                message: "Yakın zamanda şifrenizi değiştirdiniz,Lütfen tekrar giriş yapın"
-            })
+            next(e(403, "Yakın zamanda şifrenizi değiştirdiniz,Lütfen tekrar giriş yapın"))
+
         }
 
     }
