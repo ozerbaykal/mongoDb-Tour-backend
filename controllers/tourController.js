@@ -16,7 +16,7 @@ exports.aliasTopTours = async (req, res, next) => {
 
 
 
-exports.getAllTours = async (req, res) => {
+exports.getAllTours = async (req, res, next) => {
     //class'tan örnek al (geriye soruguyu olulturup döndürür)
 
     const features = new APIFeatures(Tour.find(), req.query, req.formattedQuery)
@@ -36,13 +36,11 @@ exports.getAllTours = async (req, res) => {
             tours,
         });
     } catch (error) {
-        res
-            .status(500)
-            .json({ message: "getAllTours başarısız", error: error.message });
+        next(e(500, error.message))
     }
 };
 
-exports.createTour = async (req, res) => {
+exports.createTour = async (req, res, next) => {
     try {
         //veritabanına yeni turu kaydet
         const newTour = await Tour.create(req.body);
@@ -50,48 +48,48 @@ exports.createTour = async (req, res) => {
         //clien'a cevap gönder
         res.json({ message: "createTour başarılı", tour: newTour });
     } catch (error) {
-        console.log(error);
-        res.status(400).json({ message: "createTour başarısız" });
+
+        next(e(400, error.message))
     }
 };
 
-exports.getTour = async (req, res) => {
+exports.getTour = async (req, res, next) => {
     try {
         const tour = await Tour.findById(req.params.id);
 
         res.json({ message: "getTour başarılı", tour });
     } catch (error) {
-        res.status(400).json({ message: "getTour başarısız" });
+        next(e(400, error.message))
     }
 };
 
-exports.updateTour = async (req, res) => {
+exports.updateTour = async (req, res, next) => {
     try {
         const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
         });
         res.json({ message: "UpdateTour başarılı", tour });
     } catch (error) {
-        res
-            .status(400)
-            .json({ message: "UpdateTour başarısız", error: error.message });
+        next(e(400, error.message))
     }
 };
 
-exports.deleteTour = async (req, res) => {
+exports.deleteTour = async (req, res, next) => {
     try {
         await Tour.deleteOne({ _id: req.params.id });
 
         res.status(204).json({});
 
         res.json({ message: "deleteTour başarılı" });
-    } catch (error) { }
+    } catch (error) {
+        next(e(500, error.message))
+    }
 };
 
 //rapor oluşturup gönderecek
 //zorluğa göre gruplandırarak istatistik hesapla
 
-exports.getTourStats = async (req, res) => {
+exports.getTourStats = async (req, res, next) => {
     try {
         //aggregation pipeline
         //Raporlama adımları
@@ -128,14 +126,14 @@ exports.getTourStats = async (req, res) => {
         ]);
         return res.status(200).json({ message: "Rapor oluşturuldu", stats })
     } catch (err) {
-        return res.status(500).json({ message: "Rapor oluşturalamadı" })
+        next(e(500, err.message))
 
     }
 }
 
 //rapor oluşturulup gönderilecek
 //belirli bir yıl için o yılın her ayında kaç tane ve hangi turlar başlayacak
-exports.getMonthlyPlan = async (req, res) => {
+exports.getMonthlyPlan = async (req, res, next) => {
 
     try {
         //parametre olarak gelen yılı al
@@ -191,17 +189,14 @@ exports.getMonthlyPlan = async (req, res) => {
 
         )
         if (stats.length === 0) {
-            return res.status(400).json({ message: `${year} yılına ait veri bulunamadı` })
+            next(e(500, `${year} yılına ait veri bulunamadı`))
         }
         res.status(200).json({ message: `${year} yılı için aylık plan oluşturuldu`, stats })
 
 
     } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message: `${year} yılı için aylık plan oluşturulmadı`,
-            error: error.message
-        })
+        next(e(500, "Rapor oluşturulamadı"))
+
 
     }
 

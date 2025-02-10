@@ -127,7 +127,8 @@ exports.protect = async (req, res, next) => {
 
     //1.2) token gelmediyse hata fırlat
     if (!token) {
-        return res.status(403).json({ message: "Bu işlem için yetkiniz yok (jwt gönderilmedi)" })
+        next(e(403, "Bu işlem için yetkiniz yok (jwt gönderilmedi)"))
+
     }
 
     // 2) token geçerliliğini doğrulunu kontrol et(zaman aşımına uğradımı / imza doğrumu )
@@ -137,11 +138,12 @@ exports.protect = async (req, res, next) => {
 
     } catch (error) {
         if (error.message === "jwt expired") {
+            next(e(403, "Oturumunuzun süresi doldu(tekrar giriş yapın)"))
 
-            return res.status(403).json({ message: "Oturumunuzun süresi doldu(tekrar giriş yapın)" })
+
         }
-        console.log(error);
-        return res.status(403).json({ message: "Gönderilen token geçersiz" })
+        next(e(403, "Gönderilen token geçersiz"))
+
 
 
     }
@@ -192,9 +194,7 @@ exports.restrictTo = (...roles) => (req, res, next) => {
     console.log(req.user.role)
     //a)mevcut kullanıcının kodu izin verilen roller arasında değilse hata gönder
     if (!roles.includes(req.user.role)) {
-        return res.status(403).json({
-            message: "Bu işlem için yetkiniz yok(rolunüz yetersiz)"
-        })
+        next(e(403, "Bu işlem için yetkiniz yok(rolunüz yetersiz)"))
 
     }
     //b) kullanıcının rolü yeterli ise devam et
