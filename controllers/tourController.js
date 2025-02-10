@@ -135,70 +135,65 @@ exports.getTourStats = async (req, res, next) => {
 //belirli bir yıl için o yılın her ayında kaç tane ve hangi turlar başlayacak
 exports.getMonthlyPlan = async (req, res, next) => {
 
-    try {
-        //parametre olarak gelen yılı al
-        const year = Number(req.params.year)
 
-        //raporu oluştur
-        const stats = await Tour.aggregate(
-            [
-                {
-                    $unwind: {
-                        path: "$startDates"
-                    }
-                },
-                {
-                    $match: {
-                        startDates: {
-                            $gte: new Date(`${year}-01-01`),
-                            $lte: new Date(`${year}-12-31`)
-                        }
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            $month: "$startDates"
-                        },
-                        count: {
-                            $sum: 1
-                        },
-                        tours: {
-                            $push: "$name"
-                        }
-                    }
-                },
-                {
-                    $addFields: {
-                        month: "$_id"
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0
-                    }
-                },
-                {
-                    $sort: {
-                        month: 1
+    //parametre olarak gelen yılı al
+    const year = Number(req.params.year)
+
+    //raporu oluştur
+    const stats = await Tour.aggregate(
+        [
+            {
+                $unwind: {
+                    path: "$startDates"
+                }
+            },
+            {
+                $match: {
+                    startDates: {
+                        $gte: new Date(`${year}-01-01`),
+                        $lte: new Date(`${year}-12-31`)
                     }
                 }
-            ]
+            },
+            {
+                $group: {
+                    _id: {
+                        $month: "$startDates"
+                    },
+                    count: {
+                        $sum: 1
+                    },
+                    tours: {
+                        $push: "$name"
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    month: "$_id"
+                }
+            },
+            {
+                $project: {
+                    _id: 0
+                }
+            },
+            {
+                $sort: {
+                    month: 1
+                }
+            }
+        ]
 
 
 
-        )
-        if (stats.length === 0) {
-            next(e(500, `${year} yılına ait veri bulunamadı`))
-        }
-        res.status(200).json({ message: `${year} yılı için aylık plan oluşturuldu`, stats })
-
-
-    } catch (error) {
-        next(e(500, "Rapor oluşturulamadı"))
-
-
+    )
+    if (stats.length === 0) {
+        return next(e(404, `${year} yılına ait veri bulunamadı`))
     }
+    res.status(200).json({ message: `${year} yılı için aylık plan oluşturuldu`, stats })
+
+
 
 
 

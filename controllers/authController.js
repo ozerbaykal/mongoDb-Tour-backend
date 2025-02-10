@@ -64,7 +64,7 @@ exports.login = async (req, res, next) => {
         //1)email ve şifre geldimi kontrol et
         if (!email || !password) {
             //return res.status(400).json({ message: "Lütfen mail ve şifre giriniz" })
-            next(e(400, "Lütfen mail ve şifre giriniz"))
+            return next(e(400, "Lütfen mail ve şifre giriniz"))
         }
 
         //2)client 'tan gelen email ile kayıtlı kullanıcı var mı kontrol et
@@ -73,7 +73,7 @@ exports.login = async (req, res, next) => {
         //2.1)kayıtlı kullanıcı yoksa hata fırlat
         if (!user) {
 
-            next(e(404, "Girdiğiniz mail kayıtlı kullancı bulunamadı"))
+            return next(e(404, "Girdiğiniz mail kayıtlı kullancı bulunamadı"))
 
         }
 
@@ -83,7 +83,7 @@ exports.login = async (req, res, next) => {
         //3.1) şifre yanlışssa hata fırlat
 
         if (!isValid) {
-            next(e(403, "şifreniz  hatalı,lütfen geçerli bir şifre girin"))
+            return next(e(403, "şifreniz  hatalı,lütfen geçerli bir şifre girin"))
 
         }
 
@@ -106,8 +106,6 @@ exports.logout = (req, res) => {
         res.status(500).json({ message: "Üzgünüz bir sorun oluştu" });
     }
 };
-
-
 
 
 
@@ -165,12 +163,12 @@ exports.protect = async (req, res, next) => {
         next(e(403, "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)"))
 
     }
-    if (!activeUser.active) {
+    if (!activeUser?.active) {
         next(e(403, "Kullanıcının hesabına dondurulmuş"))
     }
 
     // 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
-    if (activeUser.passChangedAt && decoded.iat) {
+    if (activeUser?.passChangedAt && decoded.iat) {
         const passChangedSeconds = parseInt(activeUser.passChangedAt.getTime() / 1000)
 
         if (passChangedSeconds > decoded.iat) {
@@ -192,11 +190,10 @@ exports.protect = async (req, res, next) => {
 // 2) Berlirli roldeki kullanıcıların route'a erişimine izin verirken diğerlerini engelleyen mw
 
 exports.restrictTo = (...roles) => (req, res, next) => {
-    console.log(roles);
-    console.log(req.user.role)
+
     //a)mevcut kullanıcının kodu izin verilen roller arasında değilse hata gönder
     if (!roles.includes(req.user.role)) {
-        next(e(403, "Bu işlem için yetkiniz yok(rolunüz yetersiz)"))
+        return next(e(403, "Bu işlem için yetkiniz yok(rolunüz yetersiz)"))
 
     }
     //b) kullanıcının rolü yeterli ise devam et
@@ -269,34 +266,50 @@ exports.resetPassword = async (req, res, next) => {
         passResetToken: hashedToken,
         passResetExpires: { $gt: Date.now() },
     })
+    //4) token geçersiz veya süresi dolmuşssa hata gönder
+    if (!user) {
+        return next(e(403, "Tokenin süresi dolmuş veya geçersiz"));
+    }
 
-    //2) kullnıcı bulunduysa ve token geçerli ise yeni şifreyi belirle
-    //3) token geçersiz veya süresi dolmuşssa hata gönder
-    //4) kullanıcını bilgilerini güncelle
+    //5) kullanıcını bilgilerini güncelle
+    user.password = req.body.newPass;
+    user.passwordConfirm = req.body.newPass;
+    user.passResetToken = undefined;
+    user.passResetExpires = undefined;
 
-    res.status(200).json({ message: "şifre güncellendi" })
+    await user.save()
+
+
+    //6)Client a cevap gönder
+    res.status(200).json({ message: "şifreniz başarılıyla  güncellendi" })
+
+}
+
+
+//  ---- Şifremi Değiştirmek istiyorum -----
+
+//kullnıcı şifresini hatırlamak ve güncelemek istiyorsa
+
+exports.updatePassword = (req, res, next) => {
+    //1) Kullanıcının bilgilerini al
+
+    //2) Gelen mevcut şifre mebcut mu kontrol et
+
+    //3) doğru ise yeni şifreyi kaydet
+
+    //4) (opsiyonel) tekrar giriş yapması için token oluşturma 
+
+
+
+
+
+
+
+    res.status(201).json({ message: "Parolanız güncellendi" })
+
+
 
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//  ---- Şifremi Değiştirmek istiyorum -----

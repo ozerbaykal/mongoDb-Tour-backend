@@ -11,7 +11,7 @@ router.route("/top-tours").get(aliasTopTours, getAllTours)
 
 router.route("/tour-stats").get(protect, restrictTo("admin"), getTourStats)
 
-router.route("/monthly-plan/:year").get(restrictTo("admin"), getMonthlyPlan)
+router.route("/monthly-plan/:year").get(protect, restrictTo("admin"), getMonthlyPlan)
 
 router.route("/")
     .get(formattedQuery, getAllTours)

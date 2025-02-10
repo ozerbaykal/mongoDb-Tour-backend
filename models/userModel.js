@@ -89,7 +89,24 @@ userSchema.pre("save", async function (next) {
     next()
 })
 
-//?sadece model üzerinden erişilebilen  fonkisyon
+//?Veri tabanına kullanıcıyı güncellemeden önce
+//Eğer şifre değiştiyse şifre değişim tarihini güncelle
+userSchema.pre("save", function (next) {
+    //eğer şifre değişmediyse veya döküman yeni oluşturulduysa mw'i durdur sonraki adıma devam et
+    if (!this.isModified("password") || this.isNew) return next()
+
+
+    //şifre yeni değiştiyse şifre değişim tarihini belirle
+    //şifre değişiminden hemen sonra  jwt token i oluşturduğumuz için  oluşturulma tarihi çakışmasın diye 1sn çıkaralım
+    this.passChangedAt = Date.now() - 1000;
+
+    next()
+
+})
+
+
+
+//?sadece model üzerinden erişilebilen  fonksiyon
 // normal şifre ile haslenmiş şifreyi userSchema ya model olarak ekledik
 userSchema.methods.correctPass = async function (pass, hashedPass) {
     return await bcrypt.compare(pass, hashedPass)
