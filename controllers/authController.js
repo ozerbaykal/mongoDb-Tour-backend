@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt")
 const e = require("../utils/error.js");
 const sendMail = require("../utils/sendMail.js");
+const crypto = require("crypto")
 
 
 //jwt token'i olulturup döndüren fonksiyon
@@ -256,10 +257,19 @@ exports.forgotPassword = async (req, res, next) => {
 
 // b) Yeni belirlenen şifreyi kaydet
 
-exports.resetPassword = (req, res, next) => {
+exports.resetPassword = async (req, res, next) => {
     //1) tokendan yola çıkarak kullncıyı bul
     const token = req.params.token
-    console.log(token)
+    //2) elimizdeki token normal  token olduğu için ve veritabanında haslenmiş hali saklandığı için bunları karşılaştırabilmek için elimizdeki tokeni hasleyip veritabanına aktarmalıyız
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    //3) haslenmiş  token'la ilişkili kullanıcıyı al
+    //3.1) son geçerlilik tarihinin dolmadığını kontrol et
+    const user = await User.findOne({
+        passResetToken: hashedToken,
+        passResetExpires: { $gt: Date.now() },
+    })
+
     //2) kullnıcı bulunduysa ve token geçerli ise yeni şifreyi belirle
     //3) token geçersiz veya süresi dolmuşssa hata gönder
     //4) kullanıcını bilgilerini güncelle
