@@ -3,6 +3,7 @@
 const { Schema, default: mongoose } = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcrypt")
+const crypto = require("crypto")
 
 const userSchema = new Schema({
     name: {
@@ -45,6 +46,7 @@ const userSchema = new Schema({
 
     },
 
+
     role: {
         type: String,
         enum: ["user", "guide", "lead-guide", "admin"],
@@ -57,7 +59,11 @@ const userSchema = new Schema({
 
     passChangedAt: {
         type: Date
-    }
+    },
+    passResetToken: String,
+
+    passResetExpires: Date,
+
 
 
 })
@@ -88,6 +94,19 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.correctPass = async function (pass, hashedPass) {
     return await bcrypt.compare(pass, hashedPass)
 };
+
+// şifre sıfırlama token i oluşturan fonksiyon
+userSchema.methods.createResetToken = function () {
+    //1)32 byte'lik  rastgele bir  veri oluştur ve bunu hexadecimal bir diziyee dönüştür
+    const resetToken = crypto.randomBytes(32).toString("hex")
+    //2)token i hasle ve veritabanına kaydet
+    this.passResetToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+    //3)tokenin son geçerlilik tarihini veritabanına akydet (10dk)
+    this.passResetExpires = Date.now() + 10 * 60 * 1000;
+
+    //4)tokenin normal halini return et
+    return resetToken;
+}
 
 const User = mongoose.model("User", userSchema)
 

@@ -110,7 +110,7 @@ exports.logout = (req, res) => {
 
 
 
-// >>>>>>>>>>>> Authorization MW <<<<<<<<<<<<<
+//? >>>>>>>>>>>> Authorization MW <<<<<<<<<<<<<
 
 // 1)Client'ın gönderdiği tokenin geçerliliğini doğrulayıp;
 // Geçerliyse route'a erişime izin vermeli
@@ -205,3 +205,66 @@ exports.restrictTo = (...roles) => (req, res, next) => {
 }
 
 // >>>>>>>>>>>> Authorization MW <<<<<<<<<<<<<
+
+
+//? -------------- Şifre Sıfırlma -----------------
+
+//  ---- Şifremi Unuttum -----
+
+// a) Eposta adresine şifre sıfırlama bağlantısını gönder
+exports.forgotPassword = async (req, res, next) => {
+    // 1)epostaya göre kullanıcı hesabına eriş
+    const user = await User.findOne({ email: req.body.email })
+    // 1.1)kullanıcı yoksa hata gönder
+    if (!user) {
+        return next(e(404, "Bu mail adresine kayıtlı kullanıcı bulunamadı"))
+    }
+
+    //2) şifre sıfırlama token i oluştur
+    const resetToken = user.createResetToken();
+
+
+    //3 veri tabanında haslenmiş olarak sakla
+    await user.save({ validateBeforeSave: false })
+
+    //4)kullanıcının mail adresine token i link olarak gönder
+
+    res.status(201).json({ message: "eposta gönderildi" })
+
+}
+
+
+
+
+// b) Yeni belirlenen şifreyi kaydet
+
+exports.resetPassword = (req, res, next) => {
+    //1) tokendan yola çıkarak kullncıyı bul
+    //2) kullnıcı bulunduysa ve token geçerli ise yeni şifreyi belirle
+    //3) token geçersiz veya süresi dolmuşssa hata gönder
+    //4) kullanıcını bilgilerini güncelle
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  ---- Şifremi Değiştirmek istiyorum -----
