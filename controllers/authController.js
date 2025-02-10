@@ -1,7 +1,8 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt")
-const e = require("../utils/error.js")
+const e = require("../utils/error.js");
+const sendMail = require("../utils/sendMail.js");
 
 
 //jwt token'i olulturup döndüren fonksiyon
@@ -224,25 +225,46 @@ exports.forgotPassword = async (req, res, next) => {
     const resetToken = user.createResetToken();
 
 
-    //3 veri tabanında haslenmiş olarak sakla
+    //3 güncellenmeleri veri tabanına kaydet
     await user.save({ validateBeforeSave: false })
 
-    //4)kullanıcının mail adresine token i link olarak gönder
+    //4)kullanıcının mail adresine tokeni link olarak gönder
 
+    const url = `${req.protocol}://${req.headers.host}/api/users/reset-password/${resetToken}`;
+    sendMail({
+        email: user.email,
+        subject: "Şifre sıfırlama bağlantısı (10dk)",
+        text: resetToken,
+        html: `
+        <h2>Merhaba ${user.name}</h2>
+        <p><b>${user.email}</b> eposta adresine bağlı tourify hesabınız için şfre sıfırlama bağlantısı
+        aşağıdadır </p>
+        <a href=${url}">${url}</a>
+        <p>Yeni şifre ile birlikte yukarıdaki bağlantıya <i>PATCH</i> isteği atınız</p>
+        <p><b><i>Tourify Ekibi</i></b></p>
+        
+        `,
+
+
+
+    })
+
+    //5)client e cevap gönder
     res.status(201).json({ message: "eposta gönderildi" })
 
 }
-
-
-
 
 // b) Yeni belirlenen şifreyi kaydet
 
 exports.resetPassword = (req, res, next) => {
     //1) tokendan yola çıkarak kullncıyı bul
+    const token = req.params.token
+    console.log(token)
     //2) kullnıcı bulunduysa ve token geçerli ise yeni şifreyi belirle
     //3) token geçersiz veya süresi dolmuşssa hata gönder
     //4) kullanıcını bilgilerini güncelle
+
+    res.status(200).json({ message: "şifre güncellendi" })
 
 }
 
