@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt")
 const e = require("../utils/error.js");
 const sendMail = require("../utils/sendMail.js");
 const crypto = require("crypto")
+const c = require("../utils/catchAsync.js")
 
 
 //jwt token'i olulturup döndüren fonksiyon
@@ -37,75 +38,64 @@ const createSendToken = (user, code, res) => {
 };
 
 //>>>>>>>>>>>>>>>kayıt Ol
-exports.signUp = async (req, res, next) => {
-    try {
-        //yeni bir kullanıcı oluştur
+exports.signUp = c(async (req, res, next) => {
 
-        const newUser = await User.create({
-            name: req.body.name,
-            email: req.body.email,
-            password: req.body.password,
-            passwordConfirm: req.body.passwordConfirm,
-        });
-        //jwt token oluşutur ve client a gönder
-        createSendToken(newUser, 201, res);
-    } catch (error) {
+    //yeni bir kullanıcı oluştur
 
-        next(e(500, error.message))
+    const newUser = await User.create({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        passwordConfirm: req.body.passwordConfirm,
+    });
+    //jwt token oluşutur ve client a gönder
+    createSendToken(newUser, 201, res);
 
-
-    }
-};
+});
 
 //>>>>>>>>>>>>>>>giriş yap
-exports.login = async (req, res, next) => {
-    try {
-        const { email, password } = req.body
-        //1)email ve şifre geldimi kontrol et
-        if (!email || !password) {
-            //return res.status(400).json({ message: "Lütfen mail ve şifre giriniz" })
-            return next(e(400, "Lütfen mail ve şifre giriniz"))
-        }
+exports.login = c(async (req, res, next) => {
 
-        //2)client 'tan gelen email ile kayıtlı kullanıcı var mı kontrol et
-        const user = await User.findOne({ email })
+    const { email, password } = req.body
+    //1)email ve şifre geldimi kontrol et
+    if (!email || !password) {
+        //return res.status(400).json({ message: "Lütfen mail ve şifre giriniz" })
+        return next(e(400, "Lütfen mail ve şifre giriniz"))
+    }
 
-        //2.1)kayıtlı kullanıcı yoksa hata fırlat
-        if (!user) {
+    //2)client 'tan gelen email ile kayıtlı kullanıcı var mı kontrol et
+    const user = await User.findOne({ email })
 
-            return next(e(404, "Girdiğiniz mail kayıtlı kullancı bulunamadı"))
+    //2.1)kayıtlı kullanıcı yoksa hata fırlat
+    if (!user) {
 
-        }
-
-        //3)client'tan gelen şifre ile veritabanında saklanan haslenmiş şifre ile eşleniyor mu kontrol et
-        const isValid = await user.correctPass(password, user.password)
-
-        //3.1) şifre yanlışssa hata fırlat
-
-        if (!isValid) {
-            return next(e(403, "şifreniz  hatalı,lütfen geçerli bir şifre girin"))
-
-        }
-
-        //4) jwt token i oluşturup gönder
-        createSendToken(user, 200, res)
-
-    } catch (error) {
-        next(e(403, error.message))
+        return next(e(404, "Girdiğiniz mail kayıtlı kullancı bulunamadı"))
 
     }
-};
+
+    //3)client'tan gelen şifre ile veritabanında saklanan haslenmiş şifre ile eşleniyor mu kontrol et
+    const isValid = await user.correctPass(password, user.password)
+
+    //3.1) şifre yanlışssa hata fırlat
+
+    if (!isValid) {
+        return next(e(403, "şifreniz  hatalı,lütfen geçerli bir şifre girin"))
+
+    }
+
+    //4) jwt token i oluşturup gönder
+    createSendToken(user, 200, res)
+
+});
 
 //>>>>>>>>>>>>>>>>çıkış yap
 
-exports.logout = (req, res) => {
-    try {
+exports.logout = c((req, res) => {
 
-        res.clearCookie("jwt").status(200).json({ message: "Çıkış yapıldı" });
-    } catch (error) {
-        res.status(500).json({ message: "Üzgünüz bir sorun oluştu" });
-    }
-};
+
+    res.clearCookie("jwt").status(200).json({ message: "Çıkış yapıldı" });
+
+});
 
 
 
@@ -127,7 +117,7 @@ exports.protect = async (req, res, next) => {
 
     //1.2) token gelmediyse hata fırlat
     if (!token) {
-        next(e(403, "Bu işlem için yetkiniz yok (jwt gönderilmedi)"))
+        return next(e(403, "Bu işlem için yetkiniz yok (jwt gönderilmedi)"))
 
     }
 
@@ -138,11 +128,11 @@ exports.protect = async (req, res, next) => {
 
     } catch (error) {
         if (error.message === "jwt expired") {
-            next(e(403, "Oturumunuzun süresi doldu(tekrar giriş yapın)"))
+            return next(e(403, "Oturumunuzun süresi doldu(tekrar giriş yapın)"))
 
 
         }
-        next(e(403, "Gönderilen token geçersiz"))
+        return next(e(403, "Gönderilen token geçersiz"))
 
 
 
@@ -160,11 +150,11 @@ exports.protect = async (req, res, next) => {
 
     //3.1) hesap durmuyorsa hata gönder
     if (!activeUser) {
-        next(e(403, "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)"))
+        return next(e(403, "Kullanıcının hesabına erişilemiyor (tekrar kayıt olun)"))
 
     }
     if (!activeUser?.active) {
-        next(e(403, "Kullanıcının hesabına dondurulmuş"))
+        return next(e(403, "Kullanıcının hesabına dondurulmuş"))
     }
 
     // 4) tokeni verdikten sonra şifresini değiştirmiş mi kontrol et 
@@ -172,7 +162,7 @@ exports.protect = async (req, res, next) => {
         const passChangedSeconds = parseInt(activeUser.passChangedAt.getTime() / 1000)
 
         if (passChangedSeconds > decoded.iat) {
-            next(e(403, "Yakın zamanda şifrenizi değiştirdiniz,Lütfen tekrar giriş yapın"))
+            return next(e(403, "Yakın zamanda şifrenizi değiştirdiniz,Lütfen tekrar giriş yapın"))
 
         }
 
@@ -211,7 +201,7 @@ exports.restrictTo = (...roles) => (req, res, next) => {
 //  ---- Şifremi Unuttum -----
 
 // a) Eposta adresine şifre sıfırlama bağlantısını gönder
-exports.forgotPassword = async (req, res, next) => {
+exports.forgotPassword = c(async (req, res, next) => {
     // 1)epostaya göre kullanıcı hesabına eriş
     const user = await User.findOne({ email: req.body.email })
     // 1.1)kullanıcı yoksa hata gönder
@@ -250,11 +240,11 @@ exports.forgotPassword = async (req, res, next) => {
     //5)client e cevap gönder
     res.status(201).json({ message: "eposta gönderildi" })
 
-}
+})
 
 // b) Yeni belirlenen şifreyi kaydet
 
-exports.resetPassword = async (req, res, next) => {
+exports.resetPassword = c(async (req, res, next) => {
     //1) tokendan yola çıkarak kullncıyı bul
     const token = req.params.token
     //2) elimizdeki token normal  token olduğu için ve veritabanında haslenmiş hali saklandığı için bunları karşılaştırabilmek için elimizdeki tokeni hasleyip veritabanına aktarmalıyız
@@ -283,14 +273,14 @@ exports.resetPassword = async (req, res, next) => {
     //6)Client a cevap gönder
     res.status(200).json({ message: "şifreniz başarılıyla  güncellendi" })
 
-}
+})
 
 
 //  ---- Şifremi Değiştirmek istiyorum -----
 
 //kullnıcı şifresini hatırlamak ve güncelemek istiyorsa
 
-exports.updatePassword = async (req, res, next) => {
+exports.updatePassword = c(async (req, res, next) => {
     //1) Kullanıcının bilgilerini al
     const user = await User.findById(req.user.id)
 
@@ -341,7 +331,7 @@ exports.updatePassword = async (req, res, next) => {
 
 
 
-}
+})
 
 
 
