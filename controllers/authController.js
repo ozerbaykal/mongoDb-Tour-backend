@@ -290,14 +290,27 @@ exports.resetPassword = async (req, res, next) => {
 
 //kullnıcı şifresini hatırlamak ve güncelemek istiyorsa
 
-exports.updatePassword = (req, res, next) => {
+exports.updatePassword = async (req, res, next) => {
     //1) Kullanıcının bilgilerini al
+    const user = await User.findById(req.user.id)
 
-    //2) Gelen mevcut şifre mebcut mu kontrol et
+
+    //2) Gelen mevcut şifre mevcut mu kontrol et
+
+    if (!(await user.correctPass(req.body.currentPass, user.password))) {
+        return next(e(400, "Girdiğiniz mevcut şifre hatalı"))
+    }
 
     //3) doğru ise yeni şifreyi kaydet
+    user.password = req.body.newPass;
+    user.passwordConfirm = req.body.newPass
 
-    //4) (opsiyonel) tekrar giriş yapması için token oluşturma 
+    await user.save();
+
+    //4) (opsiyonel) bilgilendirme maili gönder
+
+    //5) (opsiyonel) tekrar giriş yapması için token oluşturma 
+    //createSendToken(user, 200, res)
 
 
 
