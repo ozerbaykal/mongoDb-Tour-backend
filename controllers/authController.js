@@ -308,9 +308,28 @@ exports.updatePassword = async (req, res, next) => {
     await user.save();
 
     //4) (opsiyonel) bilgilendirme maili gönder
+    await sendMail({
+        email: user.email,
+        subject: "Tourify Hesabı Şifreniz Güncellendi",
+        text: "Bilgilendirme Maili",
+        html: `
+      <h1>Hesap Bilgileriniz Güncellendi</h1>
+      <p>Merhaba, ${user.name}</p>
+      <p>Hesap şifrenizin başarıyla güncellendiğini bildirmek isteriz. Eğer bu değişikliği siz yapmadıysanız veya bir sorun olduğunu düşünüyorsanız, lütfen hemen bizimle iletişime geçin.</p>
+      <p>Hesabınızın güvenliğini sağlamak için şu adımları izleyebilirsiniz:</p>
+      <ul>
+        <li>Şifrenizi değiştirin.</li>
+        <li>Hesabınızda tanımlı giriş noktalarını kontrol edin.</li>
+        <li>İki faktörlü kimlik doğrulamayı aktif hale getirin.</li>
+      </ul>
+      <p>Teşekkürler,</p>
+      <p><i><b>Tourify Ekibi</b></i></p>
+        `,
+    });
+
 
     //5) (opsiyonel) tekrar giriş yapması için token oluşturma 
-    //createSendToken(user, 200, res)
+    createSendToken(user, 200, res)
 
 
 
