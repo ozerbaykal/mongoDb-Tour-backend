@@ -21,8 +21,9 @@ exports.updateMe = c(async (req, res, next) => {
     res.status(200).json({ message: "Bilgileriniz başarılı bir şekilde güncellendi ", updated })
 })
 exports.deleteMe = c(async (req, res, next) => {
+    await User.findByIdAndUpdate(req.user.id, { active: false })
 
-    res.status(200).json("işlem başarılı")
+    res.status(200).json({ message: "Hesabınız başarıyla kaldırıldı" })
 })
 exports.getAllUsers = c(async (req, res, next) => {
 
