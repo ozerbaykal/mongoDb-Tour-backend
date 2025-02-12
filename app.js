@@ -7,6 +7,7 @@ const reviewRouter = require("./routes/reviewRoutes.js");
 const cookieParser = require("cookie-parser");
 const error = require("./utils/error.js");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet")
 
 //express uygulması oluştur
 const app = express();
@@ -14,17 +15,21 @@ const app = express();
 //rate limit : aynı ip adresinden belirli bir süre içerisinde gelen istek sınırını belirle
 
 const limiter = rateLimit({
-    max: 10,
+    max: 100,
     windowMs: 15 * 60 * 1000,
     message: "Kısa süre içerisinde çok fazla istekte bulunduz.Lütfen daha sonra  tekrar deneyiniz"
 
 });
 
-app.use("/api", limiter)
 
 
 //express in body bölümünde gelen verilere erişmemizi sağlan middleware
-app.use(express.json());
+
+app.use(helmet())
+
+app.use("/api", limiter)
+
+app.use(express.json({ limit: "10kb" }));
 
 app.use(cookieParser());
 
