@@ -7,12 +7,13 @@ const reviewRouter = require("./routes/reviewRoutes.js");
 const cookieParser = require("cookie-parser");
 const error = require("./utils/error.js");
 const rateLimit = require("express-rate-limit");
-const helmet = require("helmet")
+const helmet = require("helmet");
+const sanitize = require("express-mongo-sanitize");
+const hpp = require("hpp")
 
 //express uygulması oluştur
 const app = express();
 
-//rate limit : aynı ip adresinden belirli bir süre içerisinde gelen istek sınırını belirle
 
 const limiter = rateLimit({
     max: 100,
@@ -23,25 +24,29 @@ const limiter = rateLimit({
 
 
 
-//express in body bölümünde gelen verilere erişmemizi sağlan middleware
+//!middleware
 
+//client 'a gönderilen cevaba güvenlik amaçlı http headerları ekler
 app.use(helmet())
-
-app.use("/api", limiter)
-
+//rate limit : aynı ip adresinden belirli bir süre içerisinde gelen istek sınırını belirle
+app.use("/api", limiter);
+//client'tan gelen json verisini js'e çevirir ve maks kota belirler
 app.use(express.json({ limit: "10kb" }));
-
+//parametre kirliliğini önler
+app.use(hpp())
+//body parametre headers quert alanlarında mongodb kodu tespit ederse bozar
+app.use(sanitize());
+//gelen çerezleri işler
 app.use(cookieParser());
 
-//routerları projeye tanıt
 
+//routerları projeye tanıt
 app.use("/api/tours", tourRouter);
 app.use("/api/users", userRouter);
 app.use("/api/reviews", reviewRouter);
 
 
 // tanımlanmayan bir route'a istek atıldığında hata ver
-
 app.all("*", (req, res, next) => {
     //eski yöntem
     //res.status(404).json({ message: "İstek attığınız yol mevcut değil" })
@@ -51,7 +56,6 @@ app.all("*", (req, res, next) => {
 })
 
 //hata olduğunda devreye giren mw
-
 app.use((err, req, res, next) => {
     err.statusCode = err.statusCode || 500
     err.status = err.status || "fail"
