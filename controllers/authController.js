@@ -83,8 +83,6 @@ exports.login = c(async (req, res, next) => {
 
     }
 
-    if (!user?.active) return next(e(403, "Kullanıcının hesabı silinmiş veya inaktif bu hesaba giriş yapamazsınız"))
-
 
     //4) jwt token i oluşturup gönder
     createSendToken(user, 200, res)

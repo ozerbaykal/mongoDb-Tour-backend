@@ -104,6 +104,14 @@ userSchema.pre("save", function (next) {
 
 })
 
+//? Kullanıcı veri tabanından alınmaya çalıştığında active değeri false olanları kaldır
+
+userSchema.pre(/^find/, function (next) {
+    //yapılan sorgudan hesabı inaktif olanları kaldır
+    this.find({ active: { $ne: false } })
+    next()
+})
+
 
 
 //?sadece model üzerinden erişilebilen  fonksiyon
