@@ -136,6 +136,12 @@ tourSchema.pre("find", function (next) {
     next();
 });
 
+//? Turlar veri tabanından alınmaya çalıştığında
+tourSchema.pre(/^find/, function (next) {
+    this.populate({ path: "guides", select: "-password -__v -passResetToken -passResetExpires -passChangedAt" })
+    next()
+})
+
 //! Aggregate Middleware
 //rapor oluştruma işlemlerinden önce veya sonra çalıştırdığımız mw dir
 tourSchema.pre("aggregate", function (next) {

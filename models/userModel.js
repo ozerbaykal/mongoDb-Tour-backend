@@ -114,6 +114,7 @@ userSchema.pre(/^find/, function (next) {
 
 
 
+
 //?sadece model üzerinden erişilebilen  fonksiyon
 // normal şifre ile haslenmiş şifreyi userSchema ya model olarak ekledik
 userSchema.methods.correctPass = async function (pass, hashedPass) {
