@@ -51,7 +51,7 @@ exports.createTour = c(async (req, res, next) => {
 
 exports.getTour = c(async (req, res, next) => {
 
-    const tour = await Tour.findById(req.params.id);
+    const tour = await Tour.findById(req.params.id).populate("guides");
 
     res.json({ message: "getTour başarılı", tour });
 
