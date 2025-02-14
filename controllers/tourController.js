@@ -1,8 +1,8 @@
-const mogoose = require("mongoose");
 const Tour = require("../models/tourModel.js");
 const APIFeatures = require("../utils/apiFeatures.js");
 const e = require("../utils/error.js");
 const c = require("../utils/catchAsync.js");
+const { default: mongoose } = require("mongoose");
 
 //istek parametrelerini frontendin oluşturması yerine mw ile biz tanımlayacağız
 
@@ -45,7 +45,6 @@ exports.createTour = c(async (req, res, next) => {
 
 exports.getTour = c(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id).populate("reviews");
-  console.log(tour);
 
   res.json({ message: "getTour başarılı", tour });
 });
