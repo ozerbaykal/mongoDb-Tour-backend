@@ -30,6 +30,13 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+//Yapılan fin sorgularından önce kullanıcıların referanslarını gerçek veri kayıtları ile doldur
+reviewSchema.pre(/^find/, function (next) {
+  this.populate({ path: "user", select: "name photo" });
+
+  next();
+});
+
 const Review = mongoose.model("Review", reviewSchema);
 
 module.exports = Review;
