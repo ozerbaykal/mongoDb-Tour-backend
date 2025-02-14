@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Tour = require("../models/tourModel.js");
 const User = require("../models/userModel.js");
 const fs = require("fs");
-//const Review = require("../models/reviewModel.js");
+const Review = require("../models/reviewModel.js");
 
 // Geliştirme aşamasında mongodbdeki verilerin sıkça değişeceğinden veya bozulacağından veritabanındaki verileri temizlmeye ve json dosyasındaki verileri veritabanına aktarmaya yarayan ve terminalden komutlarla çalışacak 2 fonksiyon yazalım
 
@@ -22,14 +22,14 @@ mongoose
 // json dosyasında verileri al
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/data/tours.json`));
 const users = JSON.parse(fs.readFileSync(`${__dirname}/data/users.json`));
-//const reviews = JSON.parse(fs.readFileSync(`${__dirname}/data/reviews.json`));
+const reviews = JSON.parse(fs.readFileSync(`${__dirname}/data/reviews.json`));
 
 // devdata klasöründeki json dosylarını veritabanına aktarır.
 const importData = async () => {
   try {
     await Tour.create(tours, { validateBeforeSave: false });
     await User.create(users, { validateBeforeSave: false });
-    //await Review.create(reviews, { validateBeforeSave: false });
+    await Review.create(reviews, { validateBeforeSave: false });
     console.log("veriler veritabanına aktarıldı");
   } catch (err) {
     console.log(err);
