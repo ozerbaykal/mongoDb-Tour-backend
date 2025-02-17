@@ -1,6 +1,14 @@
 const Review = require("../models/reviewModel");
 
 const c = require("../utils/catchAsync");
+const factory = require("./handlerFactory");
+
+// CreateReview controller in dan önce çalışacak olan MW
+exports.setRefIds = (req, res, next) => {
+  //eğer ki atılan isteğin body kısmında turun id'si varsa onu kullan yoksa ozaman isteğin parametre kısmında gelen tur id'sini kullan
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.user) req.body.user = req.user._id;
+};
 
 exports.getAllReviews = c(async (req, res, next) => {
   // /api/reviews >> bütün yorumları getir
@@ -14,18 +22,10 @@ exports.getAllReviews = c(async (req, res, next) => {
   res.status(200).json({ message: "Yorumlar başarılı bir şekilde alındı", reviews });
 });
 
-exports.createReview = c(async (req, res, next) => {
-  //eğer ki atılan isteğin body kısmında turun id'si varsa onu kullan yoksa ozaman isteğin parametre kısmında gelen tur id'sini kullan
-  if (!req.body.tour) req.body.tour = req.params.tourId;
-  if (!req.body.user) req.body.user = req.user._id;
+exports.createReview = factory.createOne(Review);
 
-  const newReview = await Review.create(req.body);
+exports.getReview = factory.getOne(Review);
 
-  res.status(201).json({ message: "yorum başarılı", newReview });
-});
+exports.updateReview = factory.updateOne(Review);
 
-exports.getReview = c(async (req, res, next) => {});
-
-exports.updateReview = c(async (req, res, next) => {});
-
-exports.deleteReview = c(async (req, res, next) => {});
+exports.deleteReview = factory.deleteOne(Review);

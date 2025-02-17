@@ -30,7 +30,7 @@ router
 router
   .route("/:id")
   .get(getTour)
-  .delete(restrictTo("admin", "lead-guide"), protect, deleteTour)
+  .delete(protect, restrictTo("lead-guide", "admin"), deleteTour)
   .patch(protect, restrictTo("admin", "lead-guide,guide"), updateTour);
 
 // Nested Routes
@@ -40,6 +40,6 @@ router
 router
   .route("/:tourId/reviews")
   .get(reviewController.getAllReviews)
-  .post(protect, reviewController.createReview);
+  .post(protect, reviewController.setRefIds, reviewController.createReview);
 
 module.exports = router;

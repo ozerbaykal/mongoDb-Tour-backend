@@ -3,6 +3,7 @@ const APIFeatures = require("../utils/apiFeatures.js");
 const e = require("../utils/error.js");
 const c = require("../utils/catchAsync.js");
 const { default: mongoose } = require("mongoose");
+const factory = require("./handlerFactory.js");
 
 //istek parametrelerini frontendin oluşturması yerine mw ile biz tanımlayacağız
 
@@ -35,38 +36,16 @@ exports.getAllTours = c(async (req, res, next) => {
   });
 });
 
-exports.createTour = c(async (req, res, next) => {
-  //veritabanına yeni turu kaydet
-  const newTour = await Tour.create(req.body);
+exports.createTour = factory.createOne(Tour);
 
-  //clien'a cevap gönder
-  res.json({ message: "createTour başarılı", tour: newTour });
-});
+exports.getTour = factory.getOne(Tour, "reviews");
 
-exports.getTour = c(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id).populate("reviews");
+exports.updateTour = factory.updateOne(Tour);
 
-  res.json({ message: "getTour başarılı", tour });
-});
-
-exports.updateTour = c(async (req, res, next) => {
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-  res.json({ message: "UpdateTour başarılı", tour });
-});
-
-exports.deleteTour = c(async (req, res, next) => {
-  await Tour.deleteOne({ _id: req.params.id });
-
-  res.status(204).json({});
-
-  res.json({ message: "deleteTour başarılı" });
-});
+exports.deleteTour = factory.deleteOne(Tour);
 
 //rapor oluşturup gönderecek
 //zorluğa göre gruplandırarak istatistik hesapla
-
 exports.getTourStats = c(async (req, res, next) => {
   //aggregation pipeline
   //Raporlama adımları
