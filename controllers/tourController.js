@@ -16,25 +16,7 @@ exports.aliasTopTours = async (req, res, next) => {
   next();
 };
 
-exports.getAllTours = c(async (req, res, next) => {
-  //class'tan örnek al (geriye soruguyu olulturup döndürür)
-
-  const features = new APIFeatures(Tour.find(), req.query, req.formattedQuery)
-    .filter()
-    .limit()
-    .sort()
-    .pagination();
-
-  //sorguyu çalıştır
-  const tours = await features.query;
-
-  // client 'a veritabanından gelen verileri gönder
-  res.json({
-    message: "getAllTours başarılı",
-    results: tours.length,
-    tours,
-  });
-});
+exports.getAllTours = factory.getAll(Tour);
 
 exports.createTour = factory.createOne(Tour);
 

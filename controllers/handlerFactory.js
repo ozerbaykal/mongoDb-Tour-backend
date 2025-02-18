@@ -1,3 +1,4 @@
+const APIFeatures = require("../utils/apiFeatures");
 const c = require("../utils/catchAsync");
 
 // Bİr belgeyi  silme işlemi proje içerisinde model ismi değiştirilerek  defalarca kullanıp gereksiz kod tekrarına sebep oluyordu bundan dolayı kod tekrarına düşmemek  için fonksiyon yazdık
@@ -33,7 +34,7 @@ exports.createOne = (Model) =>
 exports.getOne = (Model, populateOptions) =>
   c(async (req, res, next) => {
     //sorguyu oluştur
-    const query = Model.findById(req.params.id);
+    let query = Model.findById(req.params.id);
 
     //eğer  populate parametresi geldiyse sorguya ekle
 
@@ -44,4 +45,32 @@ exports.getOne = (Model, populateOptions) =>
     const document = await query;
 
     res.json({ message: "Belge başarıyla alındı", data: document });
+  });
+
+//bütün dökümanları al (filtrele - sıralama)
+
+exports.getAll = (Model) =>
+  c(async (req, res, next) => {
+    // /api/reviews >> bütün yorumları getir
+    // /api/tours/:tourId/reviews  >> id li tour un yorumlarını getir
+    let filters = {};
+
+    if (req.params.tourId) filters = { tour: req.params.tourId };
+
+    //class'tan örnek al (geriye soruguyu olulturup döndürür)
+    const features = new APIFeatures(Model.find(filters), req.query, req.formattedQuery)
+      .filter()
+      .limit()
+      .sort()
+      .pagination();
+
+    //sorguyu çalıştır
+    const documents = await features.query;
+
+    // client 'a veritabanından gelen verileri gönder
+    res.json({
+      message: "Belgeler başarıyla alındı",
+      results: documents.length,
+      data: documents,
+    });
   });

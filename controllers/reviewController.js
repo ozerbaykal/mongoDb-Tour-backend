@@ -10,17 +10,7 @@ exports.setRefIds = (req, res, next) => {
   if (!req.body.user) req.body.user = req.user._id;
 };
 
-exports.getAllReviews = c(async (req, res, next) => {
-  // /api/reviews >> bütün yorumları getir
-  // /api/tours/:tourId/reviews  >> id li tour un yorumlarını getir
-  let filters = {};
-
-  if (req.params.tourId) filters = { tour: req.params.tourId };
-
-  const reviews = await Review.find(filters);
-
-  res.status(200).json({ message: "Yorumlar başarılı bir şekilde alındı", reviews });
-});
+exports.getAllReviews = factory.getAll(Review);
 
 exports.createReview = factory.createOne(Review);
 
