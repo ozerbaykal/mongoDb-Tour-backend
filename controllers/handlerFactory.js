@@ -34,7 +34,7 @@ exports.createOne = (Model) =>
 exports.getOne = (Model, populateOptions) =>
   c(async (req, res, next) => {
     //sorguyu oluştur
-    let query = Model.findById(req.params.id);
+    query = Model.findById(req.params.id);
 
     //eğer  populate parametresi geldiyse sorguya ekle
 

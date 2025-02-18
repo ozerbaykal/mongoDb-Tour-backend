@@ -37,6 +37,29 @@ reviewSchema.pre(/^find/, function (next) {
   next();
 });
 
+//bir tur için turun rating ortalamasını hesaplayan bir fonksiyon yazalım
+
+reviewSchema.statics.calcAverage = async function (tourId) {
+  //aggreagate ile istatistk hesapla
+  const stats = await this.aggregate([
+    {
+      //1)parametre olarak gelen turun  id'si ile eşleşen yorumları al
+
+      $match: { tour: tourId },
+    },
+    {
+      //2) toplam yorum sayısı ve yorumların ortalama değerini hesapla
+
+      $group: {
+        _id: "tour",
+        nRating: { $sum: 1 }, //toplam yorum sayısı
+        avgRating: { $avg: "$rating" }, // ortalama rating
+      },
+    },
+  ]);
+  console.log(stats);
+};
+
 const Review = mongoose.model("Review", reviewSchema);
 
 module.exports = Review;
