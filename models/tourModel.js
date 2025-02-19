@@ -161,10 +161,17 @@ tourSchema.pre("aggregate", function (next) {
   next();
 });
 
-//şemayı kullanarak model oluşturuyouz
+//!index
+//Koleksiyonların belirli alanalra göre sıralanmış bir kopyasını tutar
+//Avantaj:Hangi alana göre sıraladıysam o alana göre yapılan  filtreleme ve sıralma işlmelerinde daha hızlı cevap
+//Dezavantaj : Oluşturulan her index veritabanında yer kaplar (ekstra maaliyet,yazma işlemleri yavaşlar)
 
+tourSchema.index({ price: 1 });
+
+//todo bir kullanıcının birden fazla istek atmasını engelle
+
+//şemayı kullanarak model oluşturuyouz
 const Tour = mongoose.model("Tour", tourSchema);
 
 //controller da kullanmak için model i export ettik
-
 module.exports = Tour;
