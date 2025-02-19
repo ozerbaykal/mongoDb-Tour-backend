@@ -157,7 +157,7 @@ tourSchema.pre(/^find/, function (next) {
 //rapor oluştruma işlemlerinden önce veya sonra çalıştırdığımız mw dir
 tourSchema.pre("aggregate", function (next) {
   //premium olan turlar rapora dahil edilmesin
-  this.pipeline().unshift({ $match: { premium: { $ne: true } } });
+  this.pipeline().push({ $match: { premium: { $ne: true } } });
   next();
 });
 

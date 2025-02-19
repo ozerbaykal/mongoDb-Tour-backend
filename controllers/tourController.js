@@ -148,10 +148,30 @@ exports.getDistances = c(async (req, res, next) => {
   const [lat, lng] = latlng.split(",");
 
   //enlem ve boylam yoksa hata fırlat
-  if (!lat || lng) return next(e(400, "Lütfen merkez noktayı tanımlayın"));
+  if (!lat || !lng) return next(e(400, "Lütfen merkez noktayı tanımlayın"));
+
+  //unit e göre radyanı doğru formata çevirmek için kaçla çarpmalıryız ?
+  const multiplier = unit === "mi" ? 0.000621371192 : 0.001;
 
   //turların merkez noktadan uzaklıklarını hesapla
+  const distances = await Tour.aggregate([
+    //1) uzaklığı hesapla
+    {
+      $geoNear: {
+        near: { type: "Point", coordinates: [+lat, +lng] },
+        distanceField: "distance",
+        distanceMultiplier: multiplier,
+      },
+    },
+    //nesneden istediğimiz değerleri seç
+    {
+      $project: {
+        name: 1,
+        distance: 1,
+      },
+    },
+  ]);
 
   console.log(latlng, unit);
-  res.status(200).json({ message: " aradığınız tura olan mesafeniz bulundu" });
+  res.status(200).json({ message: " aradığınız tura olan mesafeniz bulundu", distances });
 });
