@@ -1,8 +1,30 @@
+const multer = require("multer");
 const User = require("../models/userModel");
 const c = require("../utils/catchAsync");
 const error = require("../utils/error");
 const filterObject = require("../utils/filterObject");
 const factory = require("./handlerFactory");
+
+//diskStorage kurulum(dosyaları disk'e kaydetmeye yarayacak)
+const multerStorage = multer.diskStorage({
+  // dosyanın yükleneceği klasorü belirle
+  destination: function (req, file, cb) {
+    cb(null, "public/img/users");
+  },
+
+  //dosyanın ismi
+  filename: function (req, file, cb) {
+    cb(null, "dosya_ismi.png");
+  },
+});
+
+//multer kurulum(clien'tan gelen dosyalara erişmemizi sağlayacak)
+const upload = multer({
+  storage: multerStorage,
+});
+
+//dosyalara erişecek olan mw
+exports.uploadUserPhoto = upload.single("avatar");
 
 //kullanıcının bilgilerini güncelle
 exports.updateMe = c(async (req, res, next) => {
