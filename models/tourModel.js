@@ -170,6 +170,9 @@ tourSchema.index({ price: 1 });
 
 //todo bir kullanıcının birden fazla istek atmasını engelle
 
+//geolocation için filtreleme
+tourSchema.index({ startLocation: "2dsphere" });
+
 //şemayı kullanarak model oluşturuyouz
 const Tour = mongoose.model("Tour", tourSchema);
 

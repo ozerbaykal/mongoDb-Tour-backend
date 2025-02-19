@@ -137,3 +137,21 @@ exports.getToursWithin = c(async (req, res, next) => {
   //clien a cevap gönder
   res.status(200).json({ message: "Girilen sınırlar içirisindeki turlar alındı", tours });
 });
+
+//uzaklık hesaplama
+
+exports.getDistances = c(async (req, res, next) => {
+  //url deki parametrelere eriştik
+  const { latlng, unit } = req.params;
+  //enlem boylamı ayır
+
+  const [lat, lng] = latlng.split(",");
+
+  //enlem ve boylam yoksa hata fırlat
+  if (!lat || lng) return next(e(400, "Lütfen merkez noktayı tanımlayın"));
+
+  //turların merkez noktadan uzaklıklarını hesapla
+
+  console.log(latlng, unit);
+  res.status(200).json({ message: " aradığınız tura olan mesafeniz bulundu" });
+});

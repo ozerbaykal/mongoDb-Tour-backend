@@ -9,6 +9,7 @@ const {
   getTourStats,
   getMonthlyPlan,
   getToursWithin,
+  getDistances,
 } = require("../controllers/tourController.js");
 const formattedQuery = require("../middleware/formatQuery");
 const { protect, restrictTo } = require("../controllers/authController.js");
@@ -45,5 +46,9 @@ router
 
 //coğrafi filtreleme
 router.route("/tours-within/:distance/center/:latlng/unit/:unit").get(getToursWithin);
+
+//uzaklık hesaplama
+
+router.route("/distances/:latlng/unit/:unit").get(getDistances);
 
 module.exports = router;
