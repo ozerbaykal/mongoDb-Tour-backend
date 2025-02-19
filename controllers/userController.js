@@ -19,9 +19,21 @@ const multerStorage = multer.diskStorage({
   },
 });
 
+//fotoğraf dışında veri tiplerini kabul etmeyen mw
+const multerFilter = (req, file, cb) => {
+  //eğer dosya tipi resim ise kabul et
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    //resim değilse hata fırlat
+    cb(new Error("Dosya tipi sadece resim olabilir(jpg,jpeg,png...)"));
+  }
+};
+
 //multer kurulum(clien'tan gelen dosyalara erişmemizi sağlayacak)
 const upload = multer({
   storage: multerStorage,
+  fileFilter: multerFilter,
 });
 
 //dosyalara erişecek olan mw
