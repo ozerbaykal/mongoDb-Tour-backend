@@ -14,7 +14,8 @@ const multerStorage = multer.diskStorage({
 
   //dosyanın ismi
   filename: function (req, file, cb) {
-    cb(null, "dosya_ismi.png");
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
   },
 });
 
