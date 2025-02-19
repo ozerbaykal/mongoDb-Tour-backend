@@ -65,7 +65,6 @@ exports.getMonthlyPlan = async (req, res, next) => {
   //parametre olarak gelen yılı al
   const year = Number(req.params.year);
 
-  //raporu oluştur
   const stats = await Tour.aggregate([
     {
       $unwind: {
@@ -114,3 +113,27 @@ exports.getMonthlyPlan = async (req, res, next) => {
   }
   res.status(200).json({ message: `${year} yılı için aylık plan oluşturuldu`, stats });
 };
+
+//belirli kooridnlatlardaki turları filtrele
+
+exports.getToursWithin = c(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  //enlem ve boylamı  değişkene aktar
+  const [lat, lng] = latlng.split(",");
+  //merkez noktası gönderilmediyse hata fırlat
+  if (!lat || !lng) return next(e(400, "Lütfen merkez koordinatlarını belirleyin"));
+
+  const radius = unit === "mi" ? distance / 3963.2 : distance / 6378.1;
+
+  //belirlenen dairesel alandaki turları filtrele
+  const tours = await Tour.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [[lat, lng], radius],
+      },
+    },
+  });
+
+  //clien a cevap gönder
+  res.status(200).json({ message: "Girilen sınırlar içirisindeki turlar alındı", tours });
+});

@@ -8,6 +8,7 @@ const {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
 } = require("../controllers/tourController.js");
 const formattedQuery = require("../middleware/formatQuery");
 const { protect, restrictTo } = require("../controllers/authController.js");
@@ -41,5 +42,8 @@ router
   .route("/:tourId/reviews")
   .get(reviewController.getAllReviews)
   .post(protect, reviewController.setRefIds, reviewController.createReview);
+
+//coğrafi filtreleme
+router.route("/tours-within/:distance/center/:latlng/unit/:unit").get(getToursWithin);
 
 module.exports = router;
