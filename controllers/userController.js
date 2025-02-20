@@ -51,10 +51,11 @@ exports.resize = (req, res, next) => {
   const filename = `user-${req.user.id}-${Date.now()}.webp`;
 
   //dosyayı işle ve yükle
-  sharp(req.file.buffer)
-    .resize(200, 200)
-    .toFormat("webp")
-    .toFile(`public/img/users/${filename}`);
+  sharp(req.file.buffer) //buffer veritipindeki resmi alır
+    .resize(200, 200) //yeniden boyutlandırma yapar
+    .toFormat("webp") //dosya formatını değiştirir
+    .webp({ quality: 70 }) //resmin kalitesini %70 e çeker
+    .toFile(`public/img/users/${filename}`); //dosyayı diske kaydeder
   next();
 };
 
@@ -68,8 +69,11 @@ exports.updateMe = c(async (req, res, next) => {
     return next(error(404, "Şifreyi bu  endpoint ile güncelleyemezsiniz "));
   }
   //2) istedğin body kısmında sadece izin verilen değerleri al
-
   const filteredBody = filterObject(req.body, ["name", "email", "photo"]);
+
+  //2.1 eğer isteğin içerisinde avatar değeri varsa güncellenecek olan  verilerin arasına url'i ekle
+  if (req.file) filteredBody.photo = req.file.filename;
+
   //3)kullancı  bilgilerini güncelle
   const updated = await User.findByIdAndUpdate(req.user.id, filteredBody, { new: true });
 
