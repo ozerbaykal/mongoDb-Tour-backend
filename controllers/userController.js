@@ -4,20 +4,24 @@ const c = require("../utils/catchAsync");
 const error = require("../utils/error");
 const filterObject = require("../utils/filterObject");
 const factory = require("./handlerFactory");
+const sharp = require("sharp");
 
 //diskStorage kurulum(dosyaları disk'e kaydetmeye yarayacak)
-const multerStorage = multer.diskStorage({
-  // dosyanın yükleneceği klasorü belirle
-  destination: function (req, file, cb) {
-    cb(null, "public/img/users");
-  },
+// const multerStorage = multer.diskStorage({
+//   // dosyanın yükleneceği klasorü belirle
+//   destination: function (req, file, cb) {
+//     cb(null, "public/img/users");
+//   },
 
-  //dosyanın ismi
-  filename: function (req, file, cb) {
-    const ext = file.mimetype.split("/")[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
-  },
-});
+//   //dosyanın ismi
+//   filename: function (req, file, cb) {
+//     const ext = file.mimetype.split("/")[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
+
+//memory storoge kurulumu( resimleri buffer veri tipinde  Ram de sakla)
+const multerStorage = multer.memoryStorage();
 
 //fotoğraf dışında veri tiplerini kabul etmeyen mw
 const multerFilter = (req, file, cb) => {
@@ -35,6 +39,24 @@ const upload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
 });
+
+//kullanıcı 4k çözünürlükte 30-40mb bir fotografı profil fotoğrafı olarak yüklemeye çalışabilir.
+//Proje içerisinde profil fotografları genelde 40x40 veya 80x80 boyutlandırılarak kullanılır ama kullanıcı fotografı secerken 2560x1680 gibi yüksek kalite fotograf secebilir ve herhangi bir işlemden geçmeden önce sunucuya kaydedersek gereksiz yer kaplar.Bu yüzden yüklenecek fotografın çzöünürlüğü projedeki max boyuta indireceğiz
+
+exports.resize = (req, res, next) => {
+  //eğer dosya yoksa yeniden boyutlandırma yapma ve sonraki adıma geç
+  if (!req.file) return next();
+
+  //işlenmiş dosya ismini belirle
+  const filename = `user-${req.user.id}-${Date.now()}.webp`;
+
+  //dosyayı işle ve yükle
+  sharp(req.file.buffer)
+    .resize(200, 200)
+    .toFormat("webp")
+    .toFile(`public/img/users/${filename}`);
+  next();
+};
 
 //dosyalara erişecek olan mw
 exports.uploadUserPhoto = upload.single("avatar");

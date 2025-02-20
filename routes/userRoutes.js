@@ -18,6 +18,7 @@ const {
   updateUser,
   deleteUser,
   uploadUserPhoto,
+  resize,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -37,7 +38,12 @@ router.post("/forgot-password", forgotPassword),
   //-----
   router.use(protect);
 
-router.patch("/update-me", uploadUserPhoto, updateMe);
+router.patch(
+  "/update-me",
+  uploadUserPhoto, //ram 'de saklar
+  resize, //Yeniden  boyutlandırıp diske kaydeder
+  updateMe // Veritabanındaki kullanıcı bilgilerini günceller(photo dahil)
+);
 
 router.delete("/delete-me", deleteMe);
 
